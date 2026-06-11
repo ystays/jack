@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Qobuz Importer</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="toolbar" aria-label="Qobuz search">
+        <div>
+          <h1>Qobuz Importer</h1>
+          <p id="health">Checking backend...</p>
+        </div>
+        <div class="searchbar">
+          <input id="query" type="search" placeholder="Search songs or albums" autocomplete="off" />
+          <select id="mediaType" aria-label="Search type">
+            <option value="album">Albums</option>
+            <option value="track">Tracks</option>
+          </select>
+          <select id="quality" aria-label="Quality">
+            <option value="2">CD</option>
+            <option value="3" selected>Hi-Res</option>
+            <option value="4">Max</option>
+            <option value="1">320</option>
+          </select>
+          <button id="searchButton">Search</button>
+        </div>
+      </section>
+
+      <section class="layout">
+        <section class="panel" aria-labelledby="resultsTitle">
+          <div class="panelHeader">
+            <h2 id="resultsTitle">Results</h2>
+            <span id="resultCount"></span>
+          </div>
+          <div id="results" class="results empty">Search Qobuz to import music into Navidrome.</div>
+        </section>
+
+        <section class="panel queuePanel" aria-labelledby="queueTitle">
+          <div class="panelHeader">
+            <h2 id="queueTitle">Queue</h2>
+            <button id="refreshQueue" class="secondary">Refresh</button>
+          </div>
+          <div id="queue" class="queue empty">No downloads queued.</div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

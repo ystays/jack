@@ -1,0 +1,44 @@
+[downloads]
+folder = "/srv/music-incoming"
+source_subdirectories = false
+disc_subdirectories = true
+concurrency = true
+max_connections = 6
+requests_per_minute = 60
+verify_ssl = true
+
+[qobuz]
+quality = 3
+download_booklets = true
+use_auth_token = true
+email_or_userid = "YOUR_QOBUZ_USER_ID"
+password_or_token = "YOUR_QOBUZ_USER_AUTH_TOKEN"
+app_id = "YOUR_QOBUZ_APP_ID"
+secrets = []
+
+[database]
+downloads_enabled = true
+downloads_path = "/srv/qobuz-import/downloads.db"
+failed_downloads_enabled = true
+failed_downloads_path = "/srv/qobuz-import/failed_downloads.db"
+
+[artwork]
+embed = true
+embed_size = "large"
+save_artwork = true
+
+[filepaths]
+add_singles_to_folder = true
+folder_format = "{albumartist} - {title} ({year}) [{container}] [{bit_depth}B-{sampling_rate}kHz]"
+track_format = "{tracknumber:02}. {artist} - {title}{explicit}"
+restrict_characters = false
+truncate_to = 120
+
+[cli]
+text_output = true
+progress_bars = false
+max_search_results = 50
+
+[misc]
+version = "2.2.0"
+check_for_updates = false
