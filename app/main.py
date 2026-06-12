@@ -1,5 +1,7 @@
+from contextlib import asynccontextmanager
 from typing import Literal
 
+import uvicorn
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +10,6 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.downloader import download_manager
 from app.qobuz import QobuzConfigurationError, search_qobuz
-
 
 app = FastAPI(title="Jack")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -22,9 +23,10 @@ class DownloadRequest(BaseModel):
     artist: str = ""
 
 
-@app.on_event("startup")
-async def startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     download_manager.start()
+    yield
 
 
 @app.get("/")
@@ -54,7 +56,9 @@ async def search(
     except QobuzConfigurationError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Qobuz search failed: {exc}") from exc
+        raise HTTPException(
+            status_code=502, detail=f"Qobuz search failed: {exc}"
+        ) from exc
     return {"items": items}
 
 
@@ -95,3 +99,7 @@ async def retry_download(job_id: str) -> dict[str, object]:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return job.as_dict()
+
+
+def main() -> None:
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8090)

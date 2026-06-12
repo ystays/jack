@@ -1,3 +1,4 @@
 .env
 streamrip.toml
 __pycache__
+.venv

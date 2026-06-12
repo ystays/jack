@@ -154,7 +154,9 @@ class DownloadManager:
         self._touch(job)
         job.output_paths = self._import_to_music_dir(staging_dir)
         job.status = "complete"
-        self._append(job, f"Imported {len(job.output_paths)} item(s) into {settings.music_dir}")
+        self._append(
+            job, f"Imported {len(job.output_paths)} item(s) into {settings.music_dir}"
+        )
         self._touch(job)
 
     def _streamrip_command(self, job: DownloadJob, staging_dir: Path) -> list[str]:

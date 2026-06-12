@@ -42,7 +42,10 @@ def normalize_album(album: dict[str, Any]) -> dict[str, Any]:
         "type": "album",
         "title": album.get("title", ""),
         "artist": _album_artist_name(album),
-        "year": str(album.get("release_date_original", "") or album.get("release_date_download", ""))[:4],
+        "year": str(
+            album.get("release_date_original", "")
+            or album.get("release_date_download", "")
+        )[:4],
         "tracksCount": album.get("tracks_count", 0),
         "duration": album.get("duration", 0),
         "maximumBitDepth": album.get("maximum_bit_depth"),
@@ -61,11 +64,16 @@ def normalize_track(track: dict[str, Any]) -> dict[str, Any]:
         "title": track.get("title", ""),
         "artist": _artist_name(track),
         "album": album.get("title", ""),
-        "year": str(album.get("release_date_original", "") or album.get("release_date_download", ""))[:4],
+        "year": str(
+            album.get("release_date_original", "")
+            or album.get("release_date_download", "")
+        )[:4],
         "duration": track.get("duration", 0),
         "trackNumber": track.get("track_number"),
-        "maximumBitDepth": track.get("maximum_bit_depth") or album.get("maximum_bit_depth"),
-        "maximumSamplingRate": track.get("maximum_sampling_rate") or album.get("maximum_sampling_rate"),
+        "maximumBitDepth": track.get("maximum_bit_depth")
+        or album.get("maximum_bit_depth"),
+        "maximumSamplingRate": track.get("maximum_sampling_rate")
+        or album.get("maximum_sampling_rate"),
         "hires": bool(track.get("hires") or album.get("hires")),
         "explicit": bool(track.get("parental_warning")),
         "cover": _image_url(album),
