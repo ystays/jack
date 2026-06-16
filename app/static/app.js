@@ -166,7 +166,6 @@ function renderQueue() {
   els.queue.innerHTML = state.jobs.map(renderJob).join("");
   document.querySelectorAll("[data-retry-id]").forEach((button) => {
     button.addEventListener("click", async () => {
-      await api(`/api/downloads/${button.dataset.retryId}/retry`, { method: "POST" });
       await loadQueue();
       startPolling();
     });
@@ -177,10 +176,6 @@ function renderJob(job) {
   const title = job.title || `${job.mediaType} ${job.mediaId}`;
   const meta = [job.artist, `Q${job.quality}`, job.error].filter(Boolean).join(" · ");
   const log = (job.log || []).slice(-8).join("\n");
-  const retry =
-    job.status === "failed"
-      ? `<div class="queueActions"><button class="secondary" data-retry-id="${escapeHtml(job.id)}">Retry</button></div>`
-      : "";
 
   return `
     <article class="queueItem">
@@ -190,7 +185,6 @@ function renderJob(job) {
       </div>
       <span class="status ${escapeHtml(job.status)}">${escapeHtml(job.status)}</span>
       ${log ? `<pre class="queueLog">${escapeHtml(log)}</pre>` : ""}
-      ${retry}
     </article>
   `;
 }
@@ -204,7 +198,7 @@ function startPolling() {
       clearInterval(state.pollTimer);
       state.pollTimer = null;
     }
-  }, 2500);
+  }, 5000);
 }
 
 els.searchButton.addEventListener("click", search);

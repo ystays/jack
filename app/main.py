@@ -11,7 +11,13 @@ from app.config import settings
 from app.downloader import download_manager
 from app.qobuz import QobuzConfigurationError, search_qobuz
 
-app = FastAPI(title="Jack")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    download_manager.start()
+    yield
+
+app = FastAPI(title="Jack", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
@@ -21,12 +27,6 @@ class DownloadRequest(BaseModel):
     quality: int | None = Field(default=None, ge=1, le=4)
     title: str = ""
     artist: str = ""
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    download_manager.start()
-    yield
 
 
 @app.get("/")
@@ -88,17 +88,6 @@ async def get_download(job_id: str) -> dict[str, object]:
         return download_manager.get_job(job_id).as_dict()
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Download job not found") from exc
-
-
-@app.post("/api/downloads/{job_id}/retry")
-async def retry_download(job_id: str) -> dict[str, object]:
-    try:
-        job = download_manager.retry_job(job_id)
-    except KeyError as exc:
-        raise HTTPException(status_code=404, detail="Download job not found") from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    return job.as_dict()
 
 
 def main() -> None:

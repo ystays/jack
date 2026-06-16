@@ -8,10 +8,17 @@ import shutil
 import uuid
 
 from app.config import settings
+from enum import Enum
 
+class MediaType(Enum):
+    ALBUM = "album"
+    TRACK = "track"
 
-VALID_MEDIA_TYPES = {"album", "track"}
-VALID_QUALITIES = {1, 2, 3, 4}
+class Quality(Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
 
 
 @dataclass
@@ -60,16 +67,14 @@ class DownloadManager:
 
     def create_job(
         self,
-        media_type: str,
+        media_type: MediaType,
         media_id: str,
-        quality: int | None,
+        quality: Quality,
         title: str = "",
         artist: str = "",
     ) -> DownloadJob:
-        if media_type not in VALID_MEDIA_TYPES:
-            raise ValueError("mediaType must be album or track")
-        resolved_quality = quality or settings.default_quality
-        if resolved_quality not in VALID_QUALITIES:
+        resolved_quality: int = int(quality)
+        if not resolved_quality:
             raise ValueError("quality must be one of 1, 2, 3, 4")
 
         job = DownloadJob(
@@ -82,19 +87,6 @@ class DownloadManager:
             quality=resolved_quality,
         )
         self.jobs[job.id] = job
-        self.queue.put_nowait(job.id)
-        return job
-
-    def retry_job(self, job_id: str) -> DownloadJob:
-        job = self.get_job(job_id)
-        if job.status not in {"failed", "complete"}:
-            raise ValueError("Only failed or complete jobs can be retried")
-
-        job.status = "queued"
-        job.error = ""
-        job.log = []
-        job.output_paths = []
-        self._touch(job)
         self.queue.put_nowait(job.id)
         return job
 
@@ -127,14 +119,20 @@ class DownloadManager:
             shutil.rmtree(staging_dir)
         staging_dir.mkdir(parents=True)
 
-        command = self._streamrip_command(job, staging_dir)
+        command: list[str] = self._streamrip_command(job, staging_dir)
         self._append(job, f"$ {' '.join(command)}")
 
-        process = await asyncio.create_subprocess_exec(
-            *command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.STDOUT,
-        )
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.STDOUT,
+            )
+        except Exception as e:
+            job.status = "failed"
+            job.error = str(e)
+            self._touch(job)
+            return
 
         assert process.stdout is not None
         while True:
@@ -161,10 +159,11 @@ class DownloadManager:
 
     def _streamrip_command(self, job: DownloadJob, staging_dir: Path) -> list[str]:
         command = [
+            "uv",
+            "run",
             settings.streamrip_bin,
             "--quality",
             str(job.quality),
-            "--no-progress",
             "-f",
             str(staging_dir),
         ]
