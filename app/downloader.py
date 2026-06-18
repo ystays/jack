@@ -8,17 +8,14 @@ import shutil
 import uuid
 
 from app.config import settings
-from enum import Enum
+from enum import IntEnum, StrEnum
 
-class MediaType(Enum):
+from streamrip.config import Config
+from streamrip.rip.main import Main
+
+class MediaType(StrEnum):
     ALBUM = "album"
     TRACK = "track"
-
-class Quality(Enum):
-    ONE = 1
-    TWO = 2
-    THREE = 3
-    FOUR = 4
 
 
 @dataclass
@@ -57,34 +54,40 @@ class DownloadJob:
 
 class DownloadManager:
     def __init__(self) -> None:
+        self.config = Config(settings.streamrip_config)
+        self.main = Main(self.config)
         self.jobs: dict[str, DownloadJob] = {}
         self.queue: asyncio.Queue[str] = asyncio.Queue()
         self.worker_task: asyncio.Task[None] | None = None
 
-    def start(self) -> None:
+    async def start(self) -> None:
+        print("Starting DownloadManager...")
+        await self.main.get_logged_in_client("qobuz")
+        print("Logged into Qobuz")
+
         if self.worker_task is None or self.worker_task.done():
             self.worker_task = asyncio.create_task(self._worker())
+        print("Worker started")
 
     def create_job(
         self,
         media_type: MediaType,
         media_id: str,
-        quality: Quality,
+        quality: int,
         title: str = "",
         artist: str = "",
     ) -> DownloadJob:
-        resolved_quality: int = int(quality)
-        if not resolved_quality:
+        if quality not in {1, 2, 3, 4}:
             raise ValueError("quality must be one of 1, 2, 3, 4")
 
         job = DownloadJob(
             id=uuid.uuid4().hex,
             source="qobuz",
-            media_type=media_type,
+            media_type=media_type.value,
             media_id=media_id,
             title=title,
             artist=artist,
-            quality=resolved_quality,
+            quality=quality,
         )
         self.jobs[job.id] = job
         self.queue.put_nowait(job.id)
@@ -112,73 +115,18 @@ class DownloadManager:
         job.status = "downloading"
         self._touch(job)
 
-        settings.music_incoming_dir.mkdir(parents=True, exist_ok=True)
-        settings.music_dir.mkdir(parents=True, exist_ok=True)
-        staging_dir = settings.music_incoming_dir / job.id
-        if staging_dir.exists():
-            shutil.rmtree(staging_dir)
-        staging_dir.mkdir(parents=True)
-
-        command: list[str] = self._streamrip_command(job, staging_dir)
-        self._append(job, f"$ {' '.join(command)}")
-
         try:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
-            )
+            await self.main.add_by_id("qobuz", job.media_type, job.media_id)
+            await self.main.resolve()
+            await self.main.rip()
         except Exception as e:
             job.status = "failed"
             job.error = str(e)
             self._touch(job)
             return
 
-        assert process.stdout is not None
-        while True:
-            line = await process.stdout.readline()
-            if not line:
-                break
-            self._append(job, line.decode(errors="replace").rstrip())
-
-        return_code = await process.wait()
-        if return_code != 0:
-            job.status = "failed"
-            job.error = f"streamrip exited with code {return_code}"
-            self._touch(job)
-            return
-
-        job.status = "importing"
-        self._touch(job)
-        job.output_paths = self._import_to_music_dir(staging_dir)
         job.status = "complete"
-        self._append(
-            job, f"Imported {len(job.output_paths)} item(s) into {settings.music_dir}"
-        )
         self._touch(job)
-
-    def _streamrip_command(self, job: DownloadJob, staging_dir: Path) -> list[str]:
-        command = [
-            "uv",
-            "run",
-            settings.streamrip_bin,
-            "--quality",
-            str(job.quality),
-            "-f",
-            str(staging_dir),
-        ]
-        if settings.streamrip_config:
-            command.extend(["--config-path", settings.streamrip_config])
-        command.extend(["id", "qobuz", job.media_type, job.media_id])
-        return command
-
-    def _import_to_music_dir(self, staging_dir: Path) -> list[str]:
-        imported: list[str] = []
-        for child in staging_dir.iterdir():
-            target = self._unique_target(settings.music_dir / child.name)
-            shutil.move(str(child), str(target))
-            imported.append(str(target))
-        return imported
 
     @staticmethod
     def _unique_target(target: Path) -> Path:

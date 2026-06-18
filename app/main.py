@@ -8,13 +8,19 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.config import settings
-from app.downloader import download_manager
+from app.downloader import download_manager, MediaType
 from app.qobuz import QobuzConfigurationError, search_qobuz
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    download_manager.start()
+    await download_manager.start()
     yield
 
 app = FastAPI(title="Jack", lifespan=lifespan)
@@ -22,7 +28,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 class DownloadRequest(BaseModel):
-    mediaType: Literal["album", "track"]
+    mediaType: MediaType
     id: str = Field(min_length=1)
     quality: int | None = Field(default=None, ge=1, le=4)
     title: str = ""
