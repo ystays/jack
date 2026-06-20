@@ -124,19 +124,11 @@ class DownloadManager:
             job.error = str(e)
             self._touch(job)
             return
+        
+        # TODO: if media type track is downloaded, move it to folder named after album
 
         job.status = "complete"
         self._touch(job)
-
-    @staticmethod
-    def _unique_target(target: Path) -> Path:
-        if not target.exists():
-            return target
-        for index in range(2, 1000):
-            candidate = target.with_name(f"{target.name} ({index})")
-            if not candidate.exists():
-                return candidate
-        raise RuntimeError(f"Could not find a free target path for {target}")
 
     def _append(self, job: DownloadJob, line: str) -> None:
         if line:
