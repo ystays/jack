@@ -2,3 +2,6 @@
 streamrip.toml
 __pycache__
 .venv
+node_modules
+frontend/dist
+*.egg-info/

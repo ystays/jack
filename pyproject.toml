@@ -15,5 +15,9 @@ dependencies = [
 [tool.uv]
 package = true
 
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["frontend*"]
+
 [project.scripts]
 jack = "app.main:main"
