@@ -46,7 +46,6 @@ async def health() -> dict[str, object]:
         "ok": True,
         "qobuzConfigured": bool(settings.qobuz_app_id),
         "streamripConfig": settings.streamrip_config,
-        "incomingDir": str(settings.music_incoming_dir),
         "musicDir": str(settings.music_dir),
     }
 

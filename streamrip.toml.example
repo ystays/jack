@@ -1,5 +1,5 @@
 [downloads]
-folder = "/srv/music-incoming"
+folder = "/srv/music"
 source_subdirectories = false
 disc_subdirectories = true
 concurrency = true
@@ -18,9 +18,9 @@ secrets = []
 
 [database]
 downloads_enabled = true
-downloads_path = "/srv/qobuz-import/downloads.db"
+downloads_path = "/data/downloads.db"
 failed_downloads_enabled = true
-failed_downloads_path = "/srv/qobuz-import/failed_downloads.db"
+failed_downloads_path = "/data/failed_downloads.db"
 
 [artwork]
 embed = true
