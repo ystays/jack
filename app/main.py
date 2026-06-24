@@ -18,10 +18,12 @@ logging.basicConfig(
     format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
 )
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await download_manager.start()
     yield
+
 
 app = FastAPI(title="Jack", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -33,6 +35,7 @@ class DownloadRequest(BaseModel):
     quality: int | None = Field(default=None, ge=1, le=4)
     title: str = ""
     artist: str = ""
+    librarySubfolder: str = ""
 
 
 @app.get("/")
@@ -47,6 +50,7 @@ async def health() -> dict[str, object]:
         "qobuzConfigured": bool(settings.qobuz_app_id),
         "streamripConfig": settings.streamrip_config,
         "musicDir": str(settings.music_dir),
+        "libraryFolderExamples": ["qobuz", "imports", "library/2026"],
     }
 
 
@@ -76,6 +80,7 @@ async def create_download(request: DownloadRequest) -> dict[str, object]:
             quality=request.quality,
             title=request.title,
             artist=request.artist,
+            library_subfolder=request.librarySubfolder,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

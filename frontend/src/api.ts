@@ -6,6 +6,7 @@ export interface Health {
   streamripConfig: string;
   incomingDir: string;
   musicDir: string;
+  libraryFolderExamples?: string[];
 }
 
 export interface SearchResult {
@@ -39,6 +40,7 @@ export interface DownloadJob {
   log: string[];
   error: string;
   outputPaths: string[];
+  targetDir: string;
 }
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -70,7 +72,11 @@ export async function searchQobuz(query: string, type: MediaType, limit = 20) {
   return data.items;
 }
 
-export async function createDownload(item: SearchResult, quality: number) {
+export async function createDownload(
+  item: SearchResult,
+  quality: number,
+  librarySubfolder: string,
+) {
   return api<DownloadJob>("/api/downloads", {
     method: "POST",
     body: JSON.stringify({
@@ -79,6 +85,7 @@ export async function createDownload(item: SearchResult, quality: number) {
       quality,
       title: item.title,
       artist: item.artist,
+      librarySubfolder,
     }),
   });
 }

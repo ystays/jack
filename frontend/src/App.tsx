@@ -2,6 +2,7 @@ import { useEffect, useState, useTransition } from "react";
 import {
   Activity,
   AlertCircle,
+  Folder,
   Download,
   Loader2,
   Music2,
@@ -125,7 +126,9 @@ function ResultCard({
 
 function JobCard({ job }: { job: DownloadJob }) {
   const title = job.title || `${job.mediaType} ${job.mediaId}`;
-  const meta = [job.artist, `Q${job.quality}`, job.error].filter(Boolean).join(" · ");
+  const meta = [job.artist, `Q${job.quality}`, job.targetDir, job.error]
+    .filter(Boolean)
+    .join(" · ");
   const log = job.log?.slice(-8).join("\n");
 
   return (
@@ -157,6 +160,9 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [mediaType, setMediaType] = useState<MediaType>("album");
   const [quality, setQuality] = useState(3);
+  const [librarySubfolder, setLibrarySubfolder] = useState(() =>
+    window.localStorage.getItem("jack.librarySubfolder") ?? "",
+  );
   const [results, setResults] = useState<SearchResult[]>([]);
   const [jobs, setJobs] = useState<DownloadJob[]>([]);
   const [error, setError] = useState("");
@@ -193,6 +199,10 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, [jobs]);
 
+  useEffect(() => {
+    window.localStorage.setItem("jack.librarySubfolder", librarySubfolder);
+  }, [librarySubfolder]);
+
   function runSearch() {
     const trimmed = query.trim();
     if (trimmed.length < 2) return;
@@ -212,7 +222,7 @@ export default function App() {
     try {
       setDownloadingId(item.id);
       setError("");
-      await createDownload(item, quality);
+      await createDownload(item, quality, librarySubfolder);
       await refreshQueue();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Download failed");
@@ -245,7 +255,7 @@ export default function App() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_140px_120px_auto]">
+            <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_140px_120px_minmax(180px,0.55fr)_auto]">
               <Input
                 type="search"
                 value={query}
@@ -276,6 +286,16 @@ export default function App() {
                 <option value={4}>Max</option>
                 <option value={1}>320</option>
               </Select>
+              <div className="relative">
+                <Folder className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={librarySubfolder}
+                  onChange={(event) => setLibrarySubfolder(event.target.value)}
+                  placeholder="Library folder"
+                  className="h-10 pl-9"
+                  aria-label="Library folder"
+                />
+              </div>
               <Button onClick={runSearch} disabled={isSearching || query.trim().length < 2}>
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

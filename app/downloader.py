@@ -4,14 +4,15 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-import shutil
 import uuid
 
 from app.config import settings
-from enum import IntEnum, StrEnum
+from app.paths import resolve_library_subfolder
+from enum import StrEnum
 
 from streamrip.config import Config
 from streamrip.rip.main import Main
+
 
 class MediaType(StrEnum):
     ALBUM = "album"
@@ -33,6 +34,7 @@ class DownloadJob:
     log: list[str] = field(default_factory=list)
     error: str = ""
     output_paths: list[str] = field(default_factory=list)
+    target_dir: Path = settings.music_dir
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -49,19 +51,23 @@ class DownloadJob:
             "log": self.log[-200:],
             "error": self.error,
             "outputPaths": self.output_paths,
+            "targetDir": str(self.target_dir),
         }
 
 
 class DownloadManager:
     def __init__(self) -> None:
-        self.config = Config(settings.streamrip_config)
-        self.main = Main(self.config)
+        self.config: Config | None = None
+        self.main: Main | None = None
         self.jobs: dict[str, DownloadJob] = {}
         self.queue: asyncio.Queue[str] = asyncio.Queue()
         self.worker_task: asyncio.Task[None] | None = None
 
     async def start(self) -> None:
         print("Starting DownloadManager...")
+        if self.main is None:
+            self.config = Config(settings.streamrip_config)
+            self.main = Main(self.config)
         await self.main.get_logged_in_client("qobuz")
         print("Logged into Qobuz")
 
@@ -73,13 +79,20 @@ class DownloadManager:
         self,
         media_type: MediaType,
         media_id: str,
-        quality: int,
+        quality: int | None,
         title: str = "",
         artist: str = "",
+        library_subfolder: str = "",
     ) -> DownloadJob:
+        if quality is None:
+            quality = settings.default_quality
         if quality not in {1, 2, 3, 4}:
             raise ValueError("quality must be one of 1, 2, 3, 4")
 
+        target_dir = resolve_library_subfolder(
+            library_subfolder,
+            settings.music_dir,
+        )
         job = DownloadJob(
             id=uuid.uuid4().hex,
             source="qobuz",
@@ -88,6 +101,7 @@ class DownloadManager:
             title=title,
             artist=artist,
             quality=quality,
+            target_dir=target_dir,
         )
         self.jobs[job.id] = job
         self.queue.put_nowait(job.id)
@@ -116,6 +130,13 @@ class DownloadManager:
         self._touch(job)
 
         try:
+            if self.main is None:
+                self.config = Config(settings.streamrip_config)
+                self.main = Main(self.config)
+            job.target_dir.mkdir(parents=True, exist_ok=True)
+            self.main.config.session.downloads.folder = str(job.target_dir)
+            self.main.pending.clear()
+            self.main.media.clear()
             await self.main.add_by_id("qobuz", job.media_type, job.media_id)
             await self.main.resolve()
             await self.main.rip()
@@ -124,7 +145,11 @@ class DownloadManager:
             job.error = str(e)
             self._touch(job)
             return
-        
+        finally:
+            if self.main is not None:
+                self.main.pending.clear()
+                self.main.media.clear()
+
         # TODO: if media type track is downloaded, move it to folder named after album
 
         job.status = "complete"
