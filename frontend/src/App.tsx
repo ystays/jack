@@ -305,7 +305,7 @@ export default function App() {
               <Input
                 value={librarySubfolder}
                 onChange={(event) => setLibrarySubfolder(event.target.value)}
-                placeholder="root, qobuz, imports, hires/2026"
+                placeholder="your library subfolder name, e.g., jackslibrary"
                 className="h-9 sm:max-w-xs"
                 aria-label="Download folder"
               />
