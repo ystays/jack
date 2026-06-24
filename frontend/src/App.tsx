@@ -255,7 +255,7 @@ export default function App() {
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_140px_120px_minmax(180px,0.55fr)_auto]">
+            <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_140px_120px_auto]">
               <Input
                 type="search"
                 value={query}
@@ -286,16 +286,6 @@ export default function App() {
                 <option value={4}>Max</option>
                 <option value={1}>320</option>
               </Select>
-              <div className="relative">
-                <Folder className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  value={librarySubfolder}
-                  onChange={(event) => setLibrarySubfolder(event.target.value)}
-                  placeholder="Library folder"
-                  className="h-10 pl-9"
-                  aria-label="Library folder"
-                />
-              </div>
               <Button onClick={runSearch} disabled={isSearching || query.trim().length < 2}>
                 {isSearching ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -304,6 +294,21 @@ export default function App() {
                 )}
                 Search
               </Button>
+            </div>
+            <div className="flex flex-col gap-2 rounded-md border bg-background p-3 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-muted-foreground">
+                <Folder className="h-4 w-4 shrink-0" />
+                <span className="shrink-0 font-medium text-foreground">Download to</span>
+                <span className="truncate">{health?.musicDir ?? "Music library"}</span>
+                <span className="shrink-0">/</span>
+              </div>
+              <Input
+                value={librarySubfolder}
+                onChange={(event) => setLibrarySubfolder(event.target.value)}
+                placeholder="root, qobuz, imports, hires/2026"
+                className="h-9 sm:max-w-xs"
+                aria-label="Download folder"
+              />
             </div>
             {error ? (
               <Alert variant="destructive">
