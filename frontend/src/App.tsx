@@ -76,8 +76,8 @@ function ResultCard({
 
   return (
     <TableRow>
-      <TableCell className="w-[72px]">
-        <div className="overflow-hidden rounded-md border bg-muted">
+      <TableCell className="w-16 align-middle sm:w-[72px]">
+        <div className="mx-auto h-14 w-14 overflow-hidden rounded-md border bg-muted">
           {item.cover ? (
             <img
               src={item.cover}
@@ -91,14 +91,14 @@ function ResultCard({
           )}
         </div>
       </TableCell>
-      <TableCell className="min-w-[260px]">
-        <div className="font-medium">{item.title}</div>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <TableCell className="max-w-0 align-middle">
+        <div className="truncate font-medium">{item.title}</div>
+        <p className="mt-1 truncate text-sm text-muted-foreground">
           {meta.filter(Boolean).join(" / ")}
         </p>
       </TableCell>
-      <TableCell>
-        <div className="flex flex-wrap gap-2">
+      <TableCell className="hidden w-[180px] align-middle sm:table-cell">
+        <div className="flex flex-wrap items-center gap-2">
           {item.hires ? <Badge variant="success">Hi-Res</Badge> : null}
           {item.explicit ? <Badge variant="warning">Explicit</Badge> : null}
           {qualityLabel(item) ? (
@@ -106,9 +106,10 @@ function ResultCard({
           ) : null}
         </div>
       </TableCell>
-      <TableCell className="text-right">
+      <TableCell className="w-[96px] align-middle text-right sm:w-[112px]">
         <Button
           size="sm"
+          className="w-9 px-0 sm:w-[92px] sm:px-3"
           disabled={disabled}
           onClick={() => onDownload(item)}
         >
@@ -117,7 +118,7 @@ function ResultCard({
           ) : (
             <Download className="h-4 w-4" />
           )}
-          Import
+          <span className="hidden sm:inline">Import</span>
         </Button>
       </TableCell>
     </TableRow>
@@ -339,13 +340,13 @@ export default function App() {
                   </div>
                 </div>
               ) : results.length ? (
-                <Table>
+                <Table className="table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[72px]">Cover</TableHead>
+                      <TableHead className="w-16 text-center sm:w-[72px]">Cover</TableHead>
                       <TableHead>Title</TableHead>
-                      <TableHead>Quality</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+                      <TableHead className="hidden w-[180px] sm:table-cell">Quality</TableHead>
+                      <TableHead className="w-[96px] text-right sm:w-[112px]">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
