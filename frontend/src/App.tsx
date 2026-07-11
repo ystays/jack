@@ -133,21 +133,21 @@ function JobCard({ job }: { job: DownloadJob }) {
   const log = job.log?.slice(-8).join("\n");
 
   return (
-    <Card>
+    <Card className="min-w-0 overflow-hidden">
       <CardHeader className="space-y-0 p-4">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <CardTitle className="truncate text-base">{title}</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">{meta}</p>
+            <p className="mt-1 break-words text-sm text-muted-foreground">{meta}</p>
           </div>
-          <Badge variant={statusVariant(job.status)} className="capitalize">
+          <Badge variant={statusVariant(job.status)} className="shrink-0 capitalize">
             {job.status}
           </Badge>
         </div>
       </CardHeader>
       {log ? (
-        <CardContent className="px-4 pb-4 pt-0">
-          <pre className="max-h-40 overflow-auto rounded-md bg-muted p-3 text-xs leading-relaxed text-muted-foreground">
+        <CardContent className="min-w-0 px-4 pb-4 pt-0">
+          <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md bg-muted p-3 text-xs leading-relaxed text-muted-foreground">
             {log}
           </pre>
         </CardContent>
@@ -282,10 +282,10 @@ export default function App() {
                 className="h-10"
                 aria-label="Quality"
               >
-                <option value={2}>CD</option>
-                <option value={3}>Hi-Res</option>
-                <option value={4}>Max</option>
-                <option value={1}>320</option>
+                <option value={1}>320 (1)</option>
+                <option value={2}>CD (2)</option>
+                <option value={3}>Hi-Res (3)</option>
+                <option value={4}>Max (4)</option>
               </Select>
               <Button onClick={runSearch} disabled={isSearching || query.trim().length < 2}>
                 {isSearching ? (
@@ -322,7 +322,7 @@ export default function App() {
         </Card>
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.75fr)] lg:items-start">
-          <Card>
+          <Card className="min-w-0">
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Results</CardTitle>
@@ -368,7 +368,7 @@ export default function App() {
             </CardContent>
           </Card>
 
-          <Card className="lg:sticky lg:top-6">
+          <Card className="min-w-0 overflow-hidden lg:sticky lg:top-6">
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <div>
                 <CardTitle>Queue</CardTitle>
