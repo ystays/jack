@@ -170,13 +170,17 @@ export default function App() {
   const [queueError, setQueueError] = useState("");
   const [isSearching, startSearchTransition] = useTransition();
   const [downloadingId, setDownloadingId] = useState("");
+  const [isRefreshingQueue, setIsRefreshingQueue] = useState(false);
 
   async function refreshQueue() {
     try {
+      setIsRefreshingQueue(true);
       setQueueError("");
       setJobs(await listDownloads());
     } catch (err) {
       setQueueError(err instanceof Error ? err.message : "Failed to load queue");
+    } finally {
+      setIsRefreshingQueue(false);
     }
   }
 
@@ -376,9 +380,17 @@ export default function App() {
                   {jobs.length ? `${jobs.length} download${jobs.length === 1 ? "" : "s"}` : "No downloads queued."}
                 </CardDescription>
               </div>
-              <Button variant="secondary" size="sm" onClick={refreshQueue}>
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={refreshQueue}
+                disabled={isRefreshingQueue}
+                aria-live="polite"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshingQueue ? "animate-spin" : ""}`}
+                />
+                {isRefreshingQueue ? "Refreshing" : "Refresh"}
               </Button>
             </CardHeader>
             <CardContent>
