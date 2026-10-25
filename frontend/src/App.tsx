@@ -91,13 +91,13 @@ function ResultCard({
           )}
         </div>
       </TableCell>
-      <TableCell className="max-w-0 align-middle">
-        <div className="truncate font-medium">{item.title}</div>
+      <TableCell className="align-middle">
+        <div className="break-words font-medium">{item.title}</div>
         <p className="mt-1 truncate text-sm text-muted-foreground">
           {meta.filter(Boolean).join(" / ")}
         </p>
       </TableCell>
-      <TableCell className="hidden w-[180px] align-middle sm:table-cell">
+      <TableCell className="w-[180px] align-middle">
         <div className="flex flex-wrap items-center gap-2">
           {item.hires ? <Badge variant="success">Hi-Res</Badge> : null}
           {item.explicit ? <Badge variant="warning">Explicit</Badge> : null}
@@ -350,12 +350,12 @@ export default function App() {
                   </div>
                 </div>
               ) : results.length ? (
-                <Table className="table-fixed">
+                <Table className="min-w-[640px] table-fixed">
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-16 text-center sm:w-[72px]">Cover</TableHead>
                       <TableHead>Title</TableHead>
-                      <TableHead className="hidden w-[180px] sm:table-cell">Quality</TableHead>
+                      <TableHead className="w-[180px]">Quality</TableHead>
                       <TableHead className="w-[96px] text-right sm:w-[112px]">Action</TableHead>
                     </TableRow>
                   </TableHeader>
