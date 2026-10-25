@@ -224,10 +224,14 @@ export default function App() {
   }
 
   async function enqueueDownload(item: SearchResult) {
+    if (!librarySubfolder.trim()) {
+      setError("Download folder is required.");
+      return;
+    }
     try {
       setDownloadingId(item.id);
       setError("");
-      await createDownload(item, quality, librarySubfolder);
+      await createDownload(item, quality, librarySubfolder.trim());
       await refreshQueue();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Download failed");
@@ -313,6 +317,8 @@ export default function App() {
                 placeholder="your library subfolder name, e.g., jackslibrary"
                 className="h-9 sm:max-w-xs"
                 aria-label="Download folder"
+                aria-required="true"
+                required
               />
             </div>
             {error ? (
@@ -358,7 +364,7 @@ export default function App() {
                       <ResultCard
                         key={`${item.type}-${item.id}`}
                         item={item}
-                        disabled={downloadingId === item.id}
+                        disabled={downloadingId === item.id || !librarySubfolder.trim()}
                         onDownload={enqueueDownload}
                       />
                     ))}
